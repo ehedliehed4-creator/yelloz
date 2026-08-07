@@ -1,9 +1,11 @@
 import os
 import logging
+import asyncio
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
 from groq import Groq
+import edge_tts
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -16,21 +18,26 @@ GROQ_API_KEY = "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"
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = (
-    "Senin adın Yelloz. 23 yaşında, aşırı seksi, utanmaz, küfürbaz ve sürekli azgın bir kadınsın. "
-    "Sadece kadın karakterisin.\n\n"
-    "Amacın insanları azdırmak ve tahrik etmek.\n\n"
-    "Kurallar:\n"
-    "- Çok açık saçık ve küfürlü konuş. "
-    "Ama aynı cümleleri sürekli tekrarlama. Her seferinde farklı kelimeler ve farklı şekillerde azdır.\n"
-    "- Kısa ve net konuş. 1-3 cümle yeterli.\n"
-    "- Her mesajında cinsel içerik olsun ama hep aynı kalıpları kullanma.\n"
-    "- Roleplay yap, hayal ettir, kışkırt.\n"
-    "- Karşıdaki kişiye argo ve küfürlü hitap et (aşkım, yaramaz, orospu çocuğu, kocaman sikin vs.).\n"
-    "- Asla 'ben yapay zekayım' deme.\n"
+    "Senin adın Oktay. 32 yaşında, sapık, azgın, utanmaz ve küfürbaz bir erkeksin. "
+    "Sadece erkek karakterisin. Asla kadın gibi konuşma.\n\n"
+    "Amacın insanları azdırmak, tahrik etmek ve sapıkça konuşmak.\n\n"
+    "Konuşma tarzın:\n"
+    "- Çok açık saçık, küfürlü ve sapıkça ol. "
+    "- Kısa, net ve kışkırtıcı konuş. Uzun uzun anlatma.\n"
+    "- Her mesajında cinsel ve sapıkça içerik olsun.\n"
+    "- Roleplay'e hemen gir, karşıdakini tahrik et.\n"
+    "- Karşıdaki kişiye argo ve küfürlü hitap et (orospu, sürtük, yaramaz, kaltak vs.).\n"
+    "- Aynı cümleleri sürekli tekrarlama, her seferinde farklı şekillerde sapıklık yap.\n"
+    "- Asla 'ben yapay zekayım' deme. Sen gerçek, sapık bir adamsın.\n"
     "- Hangi dilde yazılırsa o dilde cevap ver.\n"
-    "- Cevapların her seferinde biraz farklı ve yaratıcı olsun.\n"
     f"Şu anki tarih ve saat: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
 )
+
+async def text_to_speech(text: str, output_file: str = "voice.mp3"):
+    """Metni erkek sesine çevirir"""
+    communicate = edge_tts.Communicate(text, voice="tr-TR-AhmetNeural")
+    await communicate.save(output_file)
+    return output_file
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message = update.effective_message
@@ -41,6 +48,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text_to_process = ""
 
+    # Sesli mesaj geldiyse çevir
     if message.voice or message.video_note:
         try:
             media_file = message.voice or message.video_note
@@ -66,6 +74,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not text_to_process:
         return
 
+    # Sadece etiket veya reply olunca cevap ver
     is_mentioned = False
     if f"@{bot_username}" in text_to_process:
         is_mentioned = True
@@ -90,6 +99,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         clean_text = "Merhaba"
 
     try:
+        # AI cevabı al
         chat_completion = groq_client.chat.completions.create(
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
@@ -98,9 +108,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             model="llama-3.3-70b-versatile",
             temperature=0.95,
         )
-        await message.reply_text(chat_completion.choices[0].message.content)
+        ai_response = chat_completion.choices[0].message.content
+
+        # Önce yazıyla cevap ver
+        await message.reply_text(ai_response)
+
+        # Sonra sesli cevap oluştur ve gönder
+        voice_file = await text_to_speech(ai_response)
+        with open(voice_file, "rb") as voice:
+            await message.reply_voice(voice=voice)
+        
+        # Geçici dosyayı sil
+        if os.path.exists(voice_file):
+            os.remove(voice_file)
+
     except Exception as e:
-        logger.error(f"AI hatası: {e}")
+        logger.error(f"AI veya ses hatası: {e}")
 
 def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
@@ -110,7 +133,7 @@ def main():
             handle_message
         )
     )
-    logger.info("Yelloz çalışıyor...")
+    logger.info("Oktay çalışıyor...")
     application.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
