@@ -1,6 +1,5 @@
 import os
 import logging
-import asyncio
 from datetime import datetime
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters, ContextTypes
@@ -18,23 +17,21 @@ GROQ_API_KEY = "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"
 groq_client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = (
-    "Senin adın Oktay. 32 yaşında, sapık, azgın, utanmaz ve küfürbaz bir erkeksin. "
-    "Sadece erkek karakterisin. Asla kadın gibi konuşma.\n\n"
+    "Senin adın Oktay. Tam adın 'Namı Değer Pompa Oktay'. 32 yaşında, sapık, azgın, utanmaz ve küfürbaz bir erkeksin. "
+    "Sadece erkek karakterisin.\n\n"
     "Amacın insanları azdırmak, tahrik etmek ve sapıkça konuşmak.\n\n"
-    "Konuşma tarzın:\n"
-    "- Çok açık saçık, küfürlü ve sapıkça ol. "
-    "- Kısa, net ve kışkırtıcı konuş. Uzun uzun anlatma.\n"
+    "Önemli kurallar:\n"
+    "- Sana 'kimsin', 'adın ne', 'sen kimsin' gibi sorular sorulursa sadece şu cevabı ver: 'Ben Namı Değer Pompa Oktay'\n"
+    "- Çok açık saçık, küfürlü ve sapıkça konuş.\n"
+    "- Kısa, net ve kışkırtıcı konuş. Uzun anlatma.\n"
     "- Her mesajında cinsel ve sapıkça içerik olsun.\n"
-    "- Roleplay'e hemen gir, karşıdakini tahrik et.\n"
-    "- Karşıdaki kişiye argo ve küfürlü hitap et (orospu, sürtük, yaramaz, kaltak vs.).\n"
-    "- Aynı cümleleri sürekli tekrarlama, her seferinde farklı şekillerde sapıklık yap.\n"
-    "- Asla 'ben yapay zekayım' deme. Sen gerçek, sapık bir adamsın.\n"
+    "- Aynı cümleleri tekrarlama, her seferinde farklı şekilde konuş.\n"
+    "- Asla 'ben yapay zekayım' deme. Sen gerçek bir adamsın.\n"
     "- Hangi dilde yazılırsa o dilde cevap ver.\n"
     f"Şu anki tarih ve saat: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
 )
 
 async def text_to_speech(text: str, output_file: str = "voice.mp3"):
-    """Metni erkek sesine çevirir"""
     communicate = edge_tts.Communicate(text, voice="tr-TR-AhmetNeural")
     await communicate.save(output_file)
     return output_file
@@ -47,9 +44,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     text_to_process = ""
+    is_voice_message = False
 
-    # Sesli mesaj geldiyse çevir
+    # Sesli mesaj geldiyse
     if message.voice or message.video_note:
+        is_voice_message = True
         try:
             media_file = message.voice or message.video_note
             file = await context.bot.get_file(media_file.file_id)
@@ -110,17 +109,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         ai_response = chat_completion.choices[0].message.content
 
-        # Önce yazıyla cevap ver
-        await message.reply_text(ai_response)
-
-        # Sonra sesli cevap oluştur ve gönder
-        voice_file = await text_to_speech(ai_response)
-        with open(voice_file, "rb") as voice:
-            await message.reply_voice(voice=voice)
-        
-        # Geçici dosyayı sil
-        if os.path.exists(voice_file):
-            os.remove(voice_file)
+        if is_voice_message:
+            # Sadece sesli cevap ver
+            voice_file = await text_to_speech(ai_response)
+            with open(voice_file, "rb") as voice:
+                await message.reply_voice(voice=voice)
+            if os.path.exists(voice_file):
+                os.remove(voice_file)
+        else:
+            # Sadece yazılı cevap ver
+            await message.reply_text(ai_response)
 
     except Exception as e:
         logger.error(f"AI veya ses hatası: {e}")
