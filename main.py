@@ -10,7 +10,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Tokenler
 TELEGRAM_TOKEN = "8961906697:AAGh-6V_3Eo-0Fsnx63-DIAlY0CYQU7pods"
 GROQ_API_KEY = "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"
 
@@ -42,7 +41,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     text_to_process = ""
 
-    # Sesli mesaj varsa çevir
     if message.voice or message.video_note:
         try:
             media_file = message.voice or message.video_note
@@ -68,6 +66,52 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not text_to_process:
         return
 
-    # Sadece etiket veya reply olunca cevap ver
     is_mentioned = False
-    if f
+    if f"@{bot_username}" in text_to_process:
+        is_mentioned = True
+    elif message.entities:
+        for entity in message.entities:
+            if entity.type == "mention":
+                mention_text = text_to_process[entity.offset : entity.offset + entity.length]
+                if mention_text.lower() == f"@{bot_username}".lower():
+                    is_mentioned = True
+
+    is_reply_to_bot = (
+        message.reply_to_message
+        and message.reply_to_message.from_user
+        and message.reply_to_message.from_user.id == context.bot.id
+    )
+
+    if not (is_mentioned or is_reply_to_bot):
+        return
+
+    clean_text = text_to_process.replace(f"@{bot_username}", "").strip()
+    if not clean_text:
+        clean_text = "Merhaba"
+
+    try:
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": clean_text}
+            ],
+            model="llama-3.3-70b-versatile",
+            temperature=0.95,
+        )
+        await message.reply_text(chat_completion.choices[0].message.content)
+    except Exception as e:
+        logger.error(f"AI hatası: {e}")
+
+def main():
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    application.add_handler(
+        MessageHandler(
+            filters.TEXT | filters.VOICE | filters.VIDEO_NOTE | filters.CAPTION,
+            handle_message
+        )
+    )
+    logger.info("Yelloz çalışıyor...")
+    application.run_polling(drop_pending_updates=True)
+
+if __name__ == "__main__":
+    main()
