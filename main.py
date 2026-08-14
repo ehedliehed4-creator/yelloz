@@ -1,175 +1,182 @@
-import os
-import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+GAME OF VIYANA – TELEGRAM BOT CONFIGURATION
 
---- GÜVENLİK: Token Server Dashboard'undan (Environment Variable) Çekilir ---
-TELEGRAM_TOKEN = os.getenv"8881988772:AAHFeRBjhArmrmMT33Jy-1y-w9YpAl8lR_o"
+Game Name:
+Game Of Viyana
 
-Log Ayarları
-logging.basicConfig(
-format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-level=logging.INFO
-)
-logger = logging.getLogger(name)
+Telegram Bot Token:
+8881988772:AAHFeRBjhArmrmMT33Jy-1y-w9YpAl8lR_o
 
---- DİL SÖZLÜĞÜ (TR / RU) ---
-TEXTS = {
-"tr": {
-"welcome": "👑 Game of Viyana'ya Hoş Geldiniz, {name}!\n\nLütfen yapmak istediğiniz işlemi seçin:",
-"btn_chars": "📜 Karakter Listesi",
-"btn_status": "🏰 Krallık Durumu",
-"btn_lang": "🌐 Dil Değiştir / Язык",
-"btn_back": "🔙 Ana Menü",
-"btn_back_chars": "🔙 Karakter Listesine Dön",
-"char_select": "🎭 Karakter Listesi:\nDetayını görmek istediğiniz karakteri seçin:",
-"status_text": "🏰 Viyana Krallığı Durumu:\n\n• Sınır Güvenliği: Yüksek\n• Ekonomi: Kararlı\n• Aktif Karakter Sayısı: 20",
-"lang_select": "🌐 Lütfen bir dil seçin / Пожалуйста, выберите язык:",
-"title": "Unvan",
-"desc": "Açıklama"
-},
-"ru": {
-"welcome": "👑 Добро пожаловать в Game of Viyana, {name}!\n\nПожалуйста, выберите действие:",
-"btn_chars": "📜 Список персонажей",
-"btn_status": "🏰 Состояние королевства",
-"btn_lang": "🌐 Dil Değiştir / Язык",
-"btn_back": "🔙 Главное меню",
-"btn_back_chars": "🔙 Назад к списку",
-"char_select": "🎭 Список персонажей:\nВыберите персонажа для просмотра деталей:",
-"status_text": "🏰 Состояние Королевства Вена:\n\n• Безопасность границ: Высокая\n• Экономика: Стабильная\n• Активных персонажей: 20",
-"lang_select": "🌐 Пожалуйста, выберите язык / Lütfen bir dil seçin:",
-"title": "Титул",
-"desc": "Описание"
-}
-}
+Game URL:
+https://game-of-viyana--unknownvalley7192871.on.websim.com/
 
---- ÇOK DİLLİ KARAKTER VERİTABANI ---
-CHARACTERS = {
-"1": {
-"tr": {"name": "Anastasia", "title": "Saray Hanımefendisi", "desc": "Saray içi diplomatik güce sahip stratejist."},
-"ru": {"name": "Анастасия", "title": "Придворная дама", "desc": "Стратег с дипломатическим влиянием при дворе."}
-},
-"2": {
-"tr": {"name": "Vasya", "title": "Karakol Muhafızı", "desc": "Sınır güvenlik uzmanı ve muhafız birliği lideri."},
-"ru": {"name": "Вася", "title": "Страж аванпоста", "desc": "Эксперт по пограничной безопасности и лидер стражи."}
-},
-"3": {
-"tr": {"name": "Nex", "title": "Siber Operatör", "desc": "Gölge operasyonlar ve taktik istihbarat sorumlusu."},
-"ru": {"name": "Некс", "title": "Кибероператор", "desc": "Ответственный за теневые операции и тактическую разведку."}
-},
-"4": {
-"tr": {"name": "Narin", "title": "Zeka ve Taktik Uzmanı", "desc": "Gizli bilgi ağı yöneticisi."},
-"ru": {"name": "Нарин", "title": "Тактический эксперт", "desc": "Руководитель секретной информационной сети."}
-},
-"16": {
-"tr": {"name": "Ehed", "title": "Hükümdar / Lider", "desc": "Game of Viyana evreninin mutlak lideri ve stratejisti."},
-"ru": {"name": "Эхед", "title": "Правитель / Лидер", "desc": "Абсолютный лидер и стратег вселенной Game of Viyana."}
-}
-}
+BOT_USERNAME:
+Use the Telegram bot's actual @username from BotFather. Remove the @ symbol when storing it.
 
-Kullanıcı Dilini Getir (Varsayılan: Türkçe)
-def get_user_lang(context: ContextTypes.DEFAULT_TYPE) -> str:
-return context.user_data.get("lang", "tr")
+ENVIRONMENT VARIABLES:
 
-/start Komutu
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-lang = get_user_lang(context)
-txt = TEXTS[lang]
-user = update.effective_user
+TELEGRAM_TOKEN=8881988772:AAHFeRBjhArmrmMT33Jy-1y-w9YpAl8lR_o
+GAME_URL=https://game-of-viyana--unknownvalley7192871.on.websim.com/
+GAME_NAME=Game Of Viyana
+BOT_USERNAME=YOUR_BOT_USERNAME
 
-text = txt["welcome"].format(name=user.first_name)
+GAME REQUIREMENTS:
 
-keyboard = [
-[InlineKeyboardButton(txt["btn_chars"], callback_data="char_list")],
-[InlineKeyboardButton(txt["btn_status"], callback_data="kingdom_status")],
-[InlineKeyboardButton(txt["btn_lang"], callback_data="change_lang")]
-]
-reply_markup = InlineKeyboardMarkup(keyboard)
+This is the Telegram integration configuration for the Game Of Viyana browser game.
 
-if update.message:
-await update.message.reply_text(text, parse_mode="Markdown", reply_markup=reply_markup)
-elif update.callback_query:
-await update.callback_query.message.edit_text(text, parse_mode="Markdown", reply_markup=reply_markup)
+The Telegram bot must allow users in Telegram groups to interact with the game.
 
-Buton İşlemleri
-async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
-query = update.callback_query
-await query.answer()
+1. GROUP GAME LAUNCH
 
-lang = get_user_lang(context)
-txt = TEXTS[lang]
+When a user uses the game command in a Telegram group, the bot should open the Game Of Viyana game.
 
-# Dil Seçim Menüsü
-if query.data == "change_lang":
-keyboard = [
-[
-InlineKeyboardButton("🇹🇷 Türkçe", callback_data="set_lang_tr"),
-InlineKeyboardButton("🇷🇺 Русский", callback_data="set_lang_ru")
- ],
-[InlineKeyboardButton(txt["btn_back"], callback_data="main_menu")]
-]
-reply_markup = InlineKeyboardMarkup(keyboard)
-await query.message.edit_text(txt["lang_select"], parse_mode="Markdown", reply_markup=reply_markup)
+Example:
 
-# Dili Türkçe Yap
-elif query.data == "set_lang_tr":
-context.user_data["lang"] = "tr"
-await start(update, context)
+@oyna
 
-# Dili Rusça Yap
-elif query.data == "set_lang_ru":
-context.user_data["lang"] = "ru"
-await start(update, context)
+The bot should provide an Inline Keyboard button:
 
-# Karakter Listesi
-elif query.data == "char_list":
-keyboard = []
-for cid, char_data in CHARACTERS.items():
-char = char_data.get(lang, char_data["tr"])
-keyboard.append([InlineKeyboardButton(f"{char['name']} ({char['title']})", callback_data=f"char_{cid}")])
+🎮 GAME OF VIYANA OYNA
 
-keyboard.append([InlineKeyboardButton(txt["btn_back"], callback_data="main_menu")])
-reply_markup = InlineKeyboardMarkup(keyboard)
+The button must open:
 
-await query.message.edit_text(txt["char_select"], parse_mode="Markdown", reply_markup=reply_markup)
+https://game-of-viyana--unknownvalley7192871.on.websim.com/
 
-# Karakter Detayı
-elif query.data.startswith("char_"):
-char_id = query.data.split("_")[1]
-char_data = CHARACTERS.get(char_id)
+The game should open directly in Telegram's web-app/browser experience whenever Telegram WebApp integration is available.
 
-if char_data:
-char = char_data.get(lang, char_data["tr"])
-text = f"👤 {char['name']}\n🎖 {txt['title']}: {char['title']}\n\n📝 {txt['desc']}: {char['desc']}"
-keyboard = [[InlineKeyboardButton(txt["btn_back_chars"], callback_data="char_list")]]
-reply_markup = InlineKeyboardMarkup(keyboard)
+2. CHALLENGE SYSTEM
 
-await query.message.edit_text(text, parse_mode="Markdown", reply_markup=reply_markup)
+The group must have a battle/challenge system.
 
-# Krallık Durumu
-elif query.data == "kingdom_status":
-keyboard = [[InlineKeyboardButton(txt["btn_back"], callback_data="main_menu")]]
-reply_markup = InlineKeyboardMarkup(keyboard)
-await query.message.edit_text(txt["status_text"], parse_mode="Markdown", reply_markup=reply_markup)
+Example:
 
-# Ana Menüye Dön
-elif query.data == "main_menu":
-await start(update, context)
+/savaş @kullanici
 
-Botu Çalıştır
-def main():
-if not TELEGRAM_TOKEN:
-logger.error("TELEGRAM_TOKEN bulunamadı! Lütfen sunucu panelinizden Environment Variable ekleyin.")
-return
+When a player mentions another Telegram user, the bot sends that user a private battle invitation.
 
-app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+Example message:
 
-app.add_handler(CommandHandler("start", start))
-app.add_handler(CallbackQueryHandler(button_click))
+⚔️ SAVAŞ DAVETİ
 
-print("🚀 Game of Viyana Botu (TR/RU) Çalışıyor...")
-app.run_polling()
+👑 @Oyuncu sizi Game Of Viyana savaşına davet etti.
 
-if name == 'main':
-main()
+Savaşı kabul ediyor musunuz?
 
+[⚔️ KABUL ET]
+[❌ REDDET]
+
+The battle must only begin after the challenged player accepts.
+
+3. GAME LINK
+
+The bot must always use the GAME_URL environment variable instead of hardcoding different URLs.
+
+GAME_URL:
+
+https://game-of-viyana--unknownvalley7192871.on.websim.com/
+
+4. GAME NAME
+
+The official game name is:
+
+Game Of Viyana
+
+5. TELEGRAM BOT
+
+The Telegram bot must use:
+
+TELEGRAM_TOKEN
+
+from the Dashboard Environment Variables.
+
+Do not expose the token in messages sent to users.
+
+6. BOT USERNAME
+
+BOT_USERNAME must contain the actual Telegram bot username obtained from BotFather.
+
+Example:
+
+BOT_USERNAME=GameOfViyanaBot
+
+Do not include @ in the environment variable.
+
+7. BASIC GROUP COMMANDS
+
+The bot should support:
+
+@oyna
+/oyna
+/savaş @kullanici
+/yardım
+
+8. /OYNA
+
+When /oyna is used, show:
+
+👑 GAME OF VIYANA
+
+Gücünü topla.
+Vezirlerini geliştir.
+Sarayını büyüt.
+Rakiplerine meydan oku.
+
+[🎮 OYUNA GİR]
+
+The button must open the GAME_URL.
+
+9. /SAVAŞ
+
+When a player writes:
+
+/savaş @kullanici
+
+the bot must identify the mentioned Telegram user and send a battle invitation.
+
+The challenged player must accept or reject.
+
+10. BATTLE SYSTEM
+
+After acceptance, create a battle between the two players.
+
+Each player should have:
+
+- Vezirler
+- Güç
+- Seviye
+- Altın
+- Paye
+- Kitap
+- VIP level
+
+The battle result should depend on the player's selected Vezir and total combat power.
+
+11. WEB GAME INTEGRATION
+
+The Telegram bot and the Game Of Viyana WebSim game should use the same GAME_URL.
+
+The bot should not create a separate fake game interface.
+
+The WebSim game is the main game interface.
+
+Telegram is the social/group interaction layer.
+
+12. IMPORTANT
+
+Do not replace the Game Of Viyana game with a generic game.
+
+Do not create random unrelated buttons.
+
+Do not remove the Vezir system.
+
+Do not replace the Vezir cards with generic images.
+
+Use the existing Game Of Viyana game assets and the existing 19 Vezir card images uploaded to the WebSim project.
+
+The Telegram system should complement the WebSim game rather than replacing it.
+
+13. FINAL ENVIRONMENT CONFIGURATION
+
+TELEGRAM_TOKEN=8881988772:AAHFeRBjhArmrmMT33Jy-1y-w9YpAl8lR_o
+GAME_URL=https://game-of-viyana--unknownvalley7192871.on.websim.com/
+GAME_NAME=Game Of Viyana
+BOT_USERNAME=YOUR_BOT_USERNAME
